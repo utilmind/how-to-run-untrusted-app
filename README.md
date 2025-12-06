@@ -225,7 +225,7 @@ Open (only using your dedicated “untrusted” browser profile):
 
 ------------------------------------------------------------------------
 
-## 9. Optional: development mode with hot reload
+## 9. Optional: development mode with hot reload, to catch real-time updates
 
 ### 9.1 Dev Dockerfile
 
