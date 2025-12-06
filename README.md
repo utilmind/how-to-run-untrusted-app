@@ -182,7 +182,7 @@ docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file e
 💡 The running app will appear in your Docker Desktop
 <img width="3647" height="865" alt="image" src="https://github.com/user-attachments/assets/a9701f68-e734-42b8-aef7-84f3d0c53b00" />
 
-### 6.3 Stop *(when you finish working with app)*
+### 6.3 Stop (when you finish working with app)
 
 ```bash
 docker stop untrusted-app
