@@ -273,6 +273,8 @@ docker build -f Dockerfile.dev -t untrusted-app-dev .
 
 ### 9.2 Install dependencies into bind-mounted project
 
+⚠️ Replace `D:\path\to\project` to the path to your app in the following command!
+
 ``` bash
 docker run --rm -it   --security-opt=no-new-privileges   --env-file env.local-dev   -v D:\path\to\project:/app   untrusted-app-dev sh
 ```
