@@ -273,7 +273,7 @@ docker build -f Dockerfile.dev -t untrusted-app-dev .
 docker run --rm -it   --security-opt=no-new-privileges   --env-file env.local-dev   -v D:\path\to\project:/app   untrusted-app-dev sh
 ```
 
-Inside:
+Inside type and submit line by line:
 
     cd /app
     pnpm install --frozen-lockfile
