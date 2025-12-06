@@ -304,10 +304,39 @@ Open `package.json` and add to the "scripts" section the following modes:
 docker run --rm   -p 3000:3000   -p 5173:5173   --security-opt=no-new-privileges   --env-file env.local-dev   -e CHOKIDAR_USEPOLLING=1   -e WATCHPACK_POLLING=true   -v D:\path\to\project:/app   untrusted-app-dev pnpm dev:full
 ```
 
-Open (in special user profile):
+### 9.5 Open the App in Dev Mode (only in special user profile of your browser)
+
+After running the dev container, you can open two ports, but they behave differently:
+
+Primary entry point (recommended):
+
+```
+http://localhost:3000
+```
+
+This is the full application (frontend + backend API).
+Most real behavior, including API calls and error messages, will appear here.
+Use this for testing, verification, demos, and realistic debugging.
+
+Optional Vite dev server (frontend-only):
 
 ```
 http://localhost:5173
+```
+
+This is the raw Vite HMR server, useful only for frontend-development workflows.
+Because it does not proxy API requests, it may show errors like:
+```
+404 /api/...
+Unexpected token '<'
+failed JSON parsing
+```
+These are normal for Vite when the API lives on a different port.
+
+If in doubt — always use port 3000:
+
+```
+http://localhost:3000
 ```
 
 ---
