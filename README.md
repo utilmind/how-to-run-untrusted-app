@@ -279,9 +279,10 @@ docker build -f Dockerfile.dev -t untrusted-app-dev .
 docker run --rm -it   --security-opt=no-new-privileges   --env-file env.local-dev   -v D:\path\to\project:/app   untrusted-app-dev sh
 ```
 
-Inside type and submit line by line:
+Inside type and submit line by line. `ls` is just to make sure that `package.json` is present in the `/app` directory.
 
     cd /app
+    ls
     pnpm install --frozen-lockfile
     exit
 
