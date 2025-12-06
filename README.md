@@ -249,16 +249,20 @@ RUN corepack enable
 # Copy only package.json + lock + patches
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
+
+# Set up dependencies (once upon build)
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+# NO COPY! To let it be rebuilt on the fly on any changes.
+# COPY . .
 
 ENV NODE_ENV=development
 
-# 3000 is example. Change if your dev server listens another port.
+# This is example. Change if your dev server listens another port.
 EXPOSE 3000
 
-CMD ["pnpm", "dev", "--host", "0.0.0.0"]
+CMD ["pnpm", "dev"]
+
 ```
 
 Build:
