@@ -118,7 +118,33 @@ CMD ["node", "dist/index.js"]
 
 ------------------------------------------------------------------------
 
-## 4. Optional: env file with safe values
+## 4. (Optionally) One-time: create .dockerignore
+
+Usually docker is trying to package the entire project directory (including `node_modules`) into the build context and can encounters some kind of unreadable or broken binary/special file inside some directory not related fo sources. Let's restrict Docker accessing to the following directories/files.
+
+``` dockerignore
+node_modules
+.pnpm-store
+.git
+.gitignore
+.vscode
+.idea
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml.backup
+dist
+build
+.tmp
+*.log
+```
+
+### 4.1. Delete node_modules before first build
+
+Completely **delete `node_modules` directory** before the first build. Dangerous/malicious files can be inside of the `node_modules`. Let's rebuild them from scratch later. (In the Docker environment.)
+
+------------------------------------------------------------------------
+
+## 5. Optional: env file with safe values
 
 Create a file such as `env.local-dev`:
 
@@ -139,15 +165,15 @@ Rules:
 
 ------------------------------------------------------------------------
 
-## 5. Build & run the project safely
+## 6. Build & run the project safely
 
-### 5.1 Build the Docker image
+### 6.1 Build the Docker image
 
 ``` bash
 docker build -t untrusted-app .
 ```
 
-### 5.2 Run the container
+### 6.2 Run the container
 
 ``` bash
 docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --name untrusted-app   untrusted-app
@@ -161,7 +187,7 @@ docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file e
 
 ------------------------------------------------------------------------
 
-## 6. Use a dedicated sandboxed browser profile
+## 7. Use a dedicated sandboxed browser profile
 
 -   Create a new browser profile: **Untrusted Apps**.
 -   Do **not** sign in.
@@ -175,7 +201,7 @@ Open:
 
 ------------------------------------------------------------------------
 
-## 7. Opening the project in VS Code safely
+## 8. Opening the project in VS Code safely
 
 -   Open the folder.
 -   When asked "Do you trust the authors?", choose **No** → Restricted
@@ -185,9 +211,9 @@ Open:
 
 ------------------------------------------------------------------------
 
-## 8. Optional: development mode with hot reload
+## 9. Optional: development mode with hot reload
 
-### 8.1 Dev Dockerfile
+### 9.1 Dev Dockerfile
 
 Create `Dockerfile.dev`:
 
@@ -213,7 +239,7 @@ Build:
 docker build -f Dockerfile.dev -t untrusted-app-dev .
 ```
 
-### 8.2 Install dependencies into bind-mounted project
+### 9.2 Install dependencies into bind-mounted project
 
 ``` bash
 docker run --rm -it   --security-opt=no-new-privileges   --env-file env.local-dev   -v D:\path\to\project:/app   untrusted-app-dev sh
@@ -225,7 +251,7 @@ Inside:
     pnpm install --frozen-lockfile
     exit
 
-### 8.3 Dev scripts
+### 9.3 Dev scripts
 
 ``` json
 "scripts": {
@@ -235,7 +261,7 @@ Inside:
 }
 ```
 
-### 8.4 Run dev mode with hot reload
+### 9.4 Run dev mode with hot reload
 
 ``` bash
 docker run --rm   -p 3000:3000   -p 5173:5173   --security-opt=no-new-privileges   --env-file env.local-dev   -e CHOKIDAR_USEPOLLING=1   -e WATCHPACK_POLLING=true   -v D:\path\to\project:/app   untrusted-app-dev pnpm dev:full
@@ -247,7 +273,7 @@ Open:
 
 ------------------------------------------------------------------------
 
-## 9. Summary
+## 10. Summary
 
 -   Never run install or dev scripts from untrusted projects on your
     host.
