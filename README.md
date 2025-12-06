@@ -290,6 +290,8 @@ Inside type and submit line by line. `ls` is just to make sure that `package.jso
 
 ### 9.3 Dev scripts
 
+Open `package.json` and add to the "scripts" section the following 3 lines:
+
 ``` json
 "scripts": {
   "dev:server": "NODE_ENV=development tsx watch server/_core/index.ts",
