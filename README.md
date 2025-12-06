@@ -163,9 +163,11 @@ Create a file such as `env.local-dev`:
     VITE_OAUTH_PORTAL_URL=http://localhost:4000
     VITE_APP_ID=local-dev-app
 
+💡 This is just an example. Use environment variables relevant to certain app.
+
 Rules:
 
--   Values must be valid, but **not real credentials**.
+-   Values must be valid, but **not real credentials**. Never give your real credentials for untrusted app.
 -   Avoid pointing to real external services.
 
 ------------------------------------------------------------------------
