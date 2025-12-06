@@ -138,7 +138,7 @@ build
 *.log
 ```
 
-### 4.1. Delete node_modules before first build
+### 4.1 Delete existing node_modules before the first build
 
 Completely **delete `node_modules` directory** before the first build. Dangerous/malicious files can be inside of the `node_modules`. Let's rebuild them from scratch later. (In the Docker environment.)
 
