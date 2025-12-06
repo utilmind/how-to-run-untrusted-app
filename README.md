@@ -255,8 +255,8 @@ COPY . .
 
 ENV NODE_ENV=development
 
-# Vite usually listening 5173, check out in configs/logs for sure
-EXPOSE 5173
+# 3000 is example. Change if your dev server listens another port.
+EXPOSE 3000
 
 CMD ["pnpm", "dev", "--host", "0.0.0.0"]
 ```
