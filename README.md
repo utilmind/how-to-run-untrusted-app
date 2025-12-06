@@ -211,6 +211,8 @@ Open (only using your dedicated “untrusted” browser profile):
 
     http://localhost:3000
 
+💡 If you will see errors after this step, it’s due to errors in the application itself, maybe in it’s configuration. Maybe because `.env` file (with environment variables) has not found.
+
 ------------------------------------------------------------------------
 
 ## 8. Opening the project in VS Code safely
