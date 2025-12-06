@@ -1,0 +1,13 @@
+node_modules
+.pnpm-store
+.git
+.gitignore
+.vscode
+.idea
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml.backup
+dist
+build
+.tmp
+*.log
