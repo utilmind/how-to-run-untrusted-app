@@ -184,7 +184,7 @@ docker build -t untrusted-app .
 docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --name untrusted-app   untrusted-app
 ```
 
-With env:
+With custom environment variables instead of `.env`:
 
 ``` bash
 docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file env.local-dev   --name untrusted-app   untrusted-app
