@@ -282,7 +282,7 @@ docker run --rm -it   --security-opt=no-new-privileges   --env-file env.local-de
 Inside type and submit line by line. `ls` is just to make sure that `package.json` is present in the `/app` directory.
 
     cd /app
-    ls
+    ls -la
     pnpm install --frozen-lockfile
     exit
 
