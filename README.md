@@ -64,7 +64,7 @@ assume `pnpm`.
 
 ## 3. One-time: create a production Dockerfile
 
-ℹ️ This is production `Dockerfile`! For development `Dockerfile.dev` w/ hot reload see instructions below.
+ℹ️ This is production `Dockerfile`! For development `Dockerfile.dev` with hot reload see instructions below.
 
 In the root of the project, create a file named `Dockerfile` with:
 
