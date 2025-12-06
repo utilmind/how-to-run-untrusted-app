@@ -122,6 +122,8 @@ CMD ["node", "dist/index.js"]
 
 Usually docker is trying to package the entire project directory (including `node_modules`) into the build context and can encounters some kind of unreadable or broken binary/special file inside some directory not related fo sources. Let's restrict Docker accessing to the following directories/files.
 
+`node_modules` and other miscellaneous directories should not be in the Docker build context.
+
 ``` dockerignore
 node_modules
 .pnpm-store
