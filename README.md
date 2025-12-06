@@ -261,8 +261,12 @@ RUN pnpm install --frozen-lockfile
 ENV NODE_ENV=development
 
 # This is example. Change if your dev server listens another port.
-EXPOSE 3000
+# Backend (Express / tsx) usually listens to 3000
+# Frontend (Vite dev server) usually listens 5173
+# OK to use both
+EXPOSE 3000 5173
 
+# Override CMD in `package.json`. This is regular default.
 CMD ["pnpm", "dev"]
 
 ```
@@ -286,6 +290,7 @@ Inside type and submit line by line. `ls` is just to make sure that `package.jso
     cd /app
     ls -la
     pnpm install --frozen-lockfile
+    pnpm add -D concurrently
     exit
 
 ### 9.3 Dev scripts
