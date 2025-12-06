@@ -233,7 +233,7 @@ Open (only using your dedicated “untrusted” browser profile):
 
 ------------------------------------------------------------------------
 
-## 9. Optional: development mode with hot reload, to catch real-time updates
+## 9. Optional: development mode with HOT RELOAD, to catch real-time updates
 
 ### 9.1 Dev Dockerfile
 
@@ -243,16 +243,22 @@ Create `Dockerfile.dev`:
 FROM node:22-alpine
 WORKDIR /app
 
+# Enable pnpm via corepack
 RUN corepack enable
 
+# Copy only package.json + lock + patches
 COPY package.json pnpm-lock.yaml ./
-COPY patches ./patches 2>/dev/null || true
-
+COPY patches ./patches
 RUN pnpm install --frozen-lockfile
+
+COPY . .
 
 ENV NODE_ENV=development
 
-CMD ["pnpm", "dev"]
+# Vite usually listening 5173, check out in configs/logs for sure
+EXPOSE 5173
+
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
 ```
 
 Build:
