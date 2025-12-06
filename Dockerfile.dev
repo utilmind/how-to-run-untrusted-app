@@ -1,0 +1,26 @@
+FROM node:22-alpine
+WORKDIR /app
+
+# Enable pnpm via corepack
+RUN corepack enable
+
+# Copy only package.json + lock + patches
+COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
+
+# Set up dependencies (once upon build)
+RUN pnpm install --frozen-lockfile
+
+# NO COPY! To let it be rebuilt on the fly on any changes.
+# COPY . .
+
+ENV NODE_ENV=development
+
+# This is example. Change if your dev server listens another port.
+# Backend (Express / tsx) usually listens to 3000
+# Frontend (Vite dev server) usually listens 5173
+# OK to use both
+EXPOSE 3000 5173
+
+# Override CMD in `package.json`. This is regular default.
+CMD ["pnpm", "dev"]

@@ -10,6 +10,9 @@ WORKDIR /app
 # Copy only dependency manifests first (leverages Docker layer cache)
 COPY package.json pnpm-lock.yaml ./
 
+# Copy patches, so pnpm will be able to apply them
+COPY patches ./patches
+
 # Install dependencies strictly from the lockfile
 # (any postinstall scripts will run INSIDE the container, not on your host)
 RUN pnpm install --frozen-lockfile
