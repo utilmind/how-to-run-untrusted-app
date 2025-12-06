@@ -1,74 +1,64 @@
-# How to run an untrusted React/Node.js project via Docker
+# How to Safely Run an Untrusted React/Node.js Project Using Docker
 
-This guide describes a **safe, repeatable process** for running React +
-Node.js projects from *untrusted or unknown sources* using Docker, so
-that:
+This guide describes a **safe, repeatable workflow** for running React + Node.js projects from *untrusted or unknown sources* using Docker.  
+All Node.js scripts (including `postinstall`) will run **inside Docker** (isolated container), not on your host machine.
 
--   Node scripts and `postinstall` hooks run **inside an isolated
-    container**, not on your host.
--   The project does **not** get access to your home directory, SSH
-    keys, or other sensitive files.
--   You can still build and run the app, and even use a dev setup with
-    hot reload, without sacrificing safety.
+Key goals:
+- Prevent untrusted code from accessing your home directory, SSH keys, or sensitive files.
+- Preserve isolation while still supporting development workflows like **hot reload**.
+- Provide a documented workflow suitable for teams working on Windows/macOS/Linux.
 
-The examples below are written for projects using **pnpm** and **Node
-22** on **Windows + Docker Desktop**, but the same ideas work on macOS /
-Linux with small path adjustments.
+---
 
-------------------------------------------------------------------------
+## 1. Threat Model: What We Are Protecting Against
 
-## 1. Threat model (what we are protecting against)
+Running commands such as:
 
-When you run:
+- `pnpm install` / `npm install`
+- `pnpm dev` / `npm run dev`
+- anything inside `package.json` scripts
 
--   `pnpm install` / `npm install`
--   `pnpm dev` / `npm run dev`
--   other scripts from `package.json`
+executes arbitrary JavaScript with your user account privileges.  
+A malicious dependency may:
 
-you are allowing arbitrary JavaScript to run on your machine with the
-permissions of your user account. A malicious dependency or script can:
+- read/write any user-accessible files,
+- leak credentials or tokens,
+- run arbitrary OS commands.
 
--   read/write files in your home directory,
--   exfiltrate tokens/keys/configs over the network,
--   run arbitrary OS-level commands.
+**Solution:** run all dependency installation, builds, and dev servers inside **isolated Docker containers**.
 
-**Goal:** make sure all of that executes inside a **Docker container**,
-with access only to the project directory and nothing else. Your browser
-access is also limited via a dedicated, "sandboxed" browser profile.
+Your browser access is also sandboxed through a dedicated browser profile.
 
-------------------------------------------------------------------------
+---
 
 ## 2. Prerequisites
 
-### 2.1. Tools
+### 2.1 Required Tools
 
--   Docker Desktop installed and running.
--   Git (optional, but common in real projects).
--   A browser that supports multiple profiles (Chrome, Edge, Firefox,
-    etc.).
+- Docker Desktop
+- (Optional) Git
+- A browser supporting multiple profiles (Chrome/Edge/Firefox)
 
-### 2.2. Project layout assumptions
+### 2.2 Expected Project Layout
 
-We assume this (or similar) project structure:
+We assume:
 
--   `package.json` + `pnpm-lock.yaml`
--   a `build` script in `package.json` that:
-    -   runs `vite build` (or similar) for the client,
-    -   builds a Node.js server entry point to something like
-        `dist/index.js`.
+- `package.json` + `pnpm-lock.yaml`
+- A `build` script that:
+  - runs `vite build` (or similar),
+  - compiles a Node.js server to `dist/index.js`.
 
-You can adapt the steps for npm/yarn if needed, but the examples here
-assume `pnpm`.
+Examples use **pnpm**, but the logic is the same for npm/yarn.
 
-------------------------------------------------------------------------
+---
 
-## 3. One-time: create a production Dockerfile
+## 3. Production Dockerfile (One-Time Setup)
 
-ℹ️ This is production `Dockerfile`! For development `Dockerfile.dev` with hot reload see instructions below.
+> For development with hot reload, see **Section 9**.
 
-In the root of the project, create a file named `Dockerfile` with:
+Create a file named `Dockerfile`:
 
-``` dockerfile
+```dockerfile
 # 1) Build stage: install deps and build the app inside an isolated container
 FROM node:22-alpine AS build
 
@@ -84,14 +74,13 @@ COPY package.json pnpm-lock.yaml ./
 # Copy patches, so pnpm will be able to apply them
 COPY patches ./patches
 
-# Install dependencies strictly from the lockfile
-# (any postinstall scripts will run INSIDE the container, not on your host)
+# Install deps inside Docker (safe)
 RUN pnpm install --frozen-lockfile
 
-# Now copy the rest of the project files
+# Copy rest of the project
 COPY . .
 
-# Build both frontend (Vite) and backend bundle (as defined in package.json "build" script)
+# Build frontend & backend
 RUN pnpm build
 
 
@@ -119,17 +108,15 @@ EXPOSE 3000
 CMD ["node", "dist/index.js"]
 ```
 
-**Security note:** all postinstall scripts run inside Docker.
+**Security:** all installation scripts run inside an isolated container.
 
-------------------------------------------------------------------------
+---
 
-## 4. (Optionally) One-time: create .dockerignore
+## 4. `.dockerignore` (Recommended)
 
-Usually docker is trying to package the entire project directory (including `node_modules`) into the build context and can encounters some kind of unreadable or broken binary/special file inside some directory not related fo sources. Let's restrict Docker accessing to the following directories/files.
+Prevents Docker from copying unnecessary or unsafe files:
 
-`node_modules` and other miscellaneous directories should not be in the Docker build context.
-
-``` dockerignore
+```dockerignore
 node_modules
 .pnpm-store
 .git
@@ -145,103 +132,103 @@ build
 *.log
 ```
 
-### 4.1 Delete existing node_modules before the first build
+### 4.1 Delete Local `node_modules`
+Remove `node_modules` before the first Docker build.  
+They will be recreated inside Docker.
 
-Completely **delete `node_modules` directory** before the first build. Dangerous/malicious files can be inside of the `node_modules`. Let's rebuild them from scratch later. (In the Docker environment.)
+---
 
-------------------------------------------------------------------------
+## 5. Environment Variables
 
-## 5. Optional: env file with safe values
+Create `env.local-dev` with **safe, non-sensitive values**:
 
-Create a file such as `env.local-dev`:
+```
+OAUTH_SERVER_URL=http://localhost:4000
+VITE_APP_TITLE=Untrusted App (local dev)
+VITE_APP_LOGO=/logo.png
 
-    OAUTH_SERVER_URL=http://localhost:4000
-    VITE_APP_TITLE=Untrusted App (local dev)
-    VITE_APP_LOGO=/logo.png
+VITE_ANALYTICS_ENDPOINT=/analytics
+VITE_ANALYTICS_WEBSITE_ID=local-dev
 
-    VITE_ANALYTICS_ENDPOINT=/analytics
-    VITE_ANALYTICS_WEBSITE_ID=local-dev
+VITE_OAUTH_PORTAL_URL=http://localhost:4000
+VITE_APP_ID=local-dev-app
+```
 
-    VITE_OAUTH_PORTAL_URL=http://localhost:4000
-    VITE_APP_ID=local-dev-app
+⚠️ Use variables **actually used by your project**.  
+Do **not** put real credentials in this file.
 
-💡 This is just an example. Use environment variables relevant to certain app.
+---
 
-Rules:
+## 6. Build & Run the App Safely
 
--   Values must be valid, but **not real credentials**. Never give your real credentials for untrusted app.
--   Avoid pointing to real external services.
+### 6.1 Build
 
-------------------------------------------------------------------------
-
-## 6. Build & run the project safely
-
-### 6.1 Build the Docker image
-
-``` bash
+```bash
 docker build -t untrusted-app .
 ```
 
-### 6.2 Run the container
+### 6.2 Run
 
-``` bash
+```bash
 docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --name untrusted-app   untrusted-app
 ```
 
-With custom environment variables instead of `.env`:
+With env file:
 
-``` bash
+```bash
 docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file env.local-dev   --name untrusted-app   untrusted-app
 ```
 
 💡 The running app will appear in your Docker Desktop
 <img width="3647" height="865" alt="image" src="https://github.com/user-attachments/assets/a9701f68-e734-42b8-aef7-84f3d0c53b00" />
 
-To stop docker project, run
+### 6.3 Stop (when you finish working with app)
 
-``` bash
+```bash
 docker stop untrusted-app
 ```
 
-------------------------------------------------------------------------
+---
 
-## 7. Use a dedicated sandboxed browser profile
+## 7. Use a Dedicated “Untrusted Apps” Browser Profile
 
--   Create a new browser profile: **Untrusted Apps**.
--   Do **not** sign in.
--   Disable password storage.
--   Do not log into important services.
--   Use only test/demo credentials.
+- Create a new browser profile: **Untrusted Apps**.
+- **Do not sign in.**
+- Disable password storage.
+- Do not log into important services.
+- Use only test/demo credentials.
 
 **Do not sign in** with your dedicated “untrusted” profile. Let it displaying “sign in” button.
 
 <img style="max-width: 742; height: 1140px; height: 500px;" alt="image" src="https://github.com/user-attachments/assets/a9b44446-c96d-4289-b06a-76bf2ba231fc" />
 
 Open (only using your dedicated “untrusted” browser profile):
+```
+http://localhost:3000
+```
 
-    http://localhost:3000
+If errors appear, they likely relate to app configuration, not Docker.
+Maybe because `.env` file (with environment variables) has not found (in this case re-read previous steps,
+particularly [how to point environment variables to the Docker](#5-optional-env-file-with-safe-values)).
 
-💡 If you will see errors after this step, it’s due to errors in the application itself, maybe in it’s configuration. Maybe because `.env` file (with environment variables) has not found (in this case re-read previous steps, particularly [how to point environment variables to the Docker](#5-optional-env-file-with-safe-values)).
+---
 
-------------------------------------------------------------------------
+## 8. Opening the Project in VS Code (Safely)
 
-## 8. Opening the project in VS Code safely
+- Open the folder.
+- When asked “Do you trust the authors?” → **No** → Restricted Mode.
+- Avoid running pnpm/npm/node on the host.
+- Use Docker for all commands.
 
--   Open the folder.
--   When asked "Do you trust the authors?", choose **No** → Restricted
-    Mode.
--   Avoid running npm/pnpm/node on host.
--   All scripts should run only in Docker.
+---
 
-------------------------------------------------------------------------
-
-## 9. Optional: development mode with HOT RELOAD, to catch real-time updates
+## 9. Optional: Development Mode with Hot Reload
 
 ### 9.1 Dev Dockerfile
 
 Create `Dockerfile.dev`:
 
-``` dockerfile
+```dockerfile
 FROM node:22-alpine
 WORKDIR /app
 
@@ -252,7 +239,7 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
 
-# Set up dependencies (once upon build)
+# Install deps once during image build
 RUN pnpm install --frozen-lockfile
 
 # NO COPY! To let it be rebuilt on the fly on any changes.
@@ -261,14 +248,12 @@ RUN pnpm install --frozen-lockfile
 ENV NODE_ENV=development
 
 # This is example. Change if your dev server listens another port.
-# Backend (Express / tsx) usually listens to 3000
-# Frontend (Vite dev server) usually listens 5173
-# OK to use both
+# Backend (Express / tsx) typically: 3000
+# Frontend (Vite dev server) typically: 5173
 EXPOSE 3000 5173
 
-# Override CMD in `package.json`. This is regular default.
+# Run the commands
 CMD ["pnpm", "dev"]
-
 ```
 
 Build:
@@ -277,51 +262,60 @@ Build:
 docker build -f Dockerfile.dev -t untrusted-app-dev .
 ```
 
-### 9.2 Install dependencies into bind-mounted project
+### 9.2 Install Dependencies into the Mounted Project Directory
+
+Your `node_modules` should live **on the host filesystem**,  
+but should be **installed from inside Docker** (safe).
 
 ⚠️ Replace `D:\path\to\project` to the path to your app in the following command!
 
-``` bash
+```bash
 docker run --rm -it   --security-opt=no-new-privileges   --env-file env.local-dev   -v D:\path\to\project:/app   untrusted-app-dev sh
 ```
 
-Inside type and submit line by line. `ls` is just to make sure that `package.json` is present in the `/app` directory.
+Inside the container type and submit line by line. `ls` is just to make sure that `package.json` is present in the `/app` directory.
 
-    cd /app
-    ls -la
-    pnpm install --frozen-lockfile
-    pnpm add -D concurrently
-    exit
+```
+cd /app
+ls -la
+pnpm install --frozen-lockfile
+pnpm add -D concurrently
+exit
+```
 
-### 9.3 Dev scripts
+### 9.3 Update `package.json` Dev Scripts
 
-Open `package.json` and add to the "scripts" section the following 3 lines:
+Open `package.json` and add to the "scripts" section the following modes:
 
-``` json
+```json
 "scripts": {
   "dev:server": "NODE_ENV=development tsx watch server/_core/index.ts",
   "dev:client": "vite --host 0.0.0.0 --port 5173",
-  "dev:full": "concurrently -n server,client "pnpm:dev:server" "pnpm:dev:client""
+  "dev:full": "concurrently -n server,client \"pnpm:dev:server\" \"pnpm:dev:client\""
 }
 ```
 
-### 9.4 Run dev mode with hot reload
 
-``` bash
+### 9.4 Run Dev Mode (with hot reload)
+
+⚠️ Replace `D:\path\to\project` to the path to your app in the following command!
+
+```bash
 docker run --rm   -p 3000:3000   -p 5173:5173   --security-opt=no-new-privileges   --env-file env.local-dev   -e CHOKIDAR_USEPOLLING=1   -e WATCHPACK_POLLING=true   -v D:\path\to\project:/app   untrusted-app-dev pnpm dev:full
 ```
 
 Open (in special user profile):
 
-    http://localhost:5173
+```
+http://localhost:5173
+```
 
-------------------------------------------------------------------------
+---
 
 ## 10. Summary
 
--   Never run install or dev scripts from untrusted projects on your
-    host.
--   Use Docker for installation, build, prod, and dev.
--   Restrict container access; never mount your home directory.
--   Use a sandbox browser profile.
--   Use VS Code in Restricted Mode for such projects.
+- **Never** run install/build/dev scripts from untrusted projects on your host.
+- **Use Docker for everything**: install → build → prod → dev.
+- Never mount your home directory into a container.
+- Use a sandbox browser profile.
+- Use VS Code in Restricted Mode.
