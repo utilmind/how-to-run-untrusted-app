@@ -178,6 +178,8 @@ With env file:
 ```bash
 docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file env.local-dev   --name untrusted-app   untrusted-app
 ```
+ATTN! `untrusted-app` is the name of container. And the image name is also `untrusted-app`.
+You may skip specifying `--name [container-name]`, so the Docker will assign random name for the container.
 
 💡 The running app will appear in your Docker Desktop
 <img width="3647" height="865" alt="image" src="https://github.com/user-attachments/assets/a9701f68-e734-42b8-aef7-84f3d0c53b00" />
@@ -187,7 +189,7 @@ docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file e
 ```bash
 docker stop untrusted-app
 ```
-Or `untrusted-app-dev`. Please check out the exact app name in the list of running containers of Docker Desktop.
+Or other container name. Please check out the exact app name in the list of running containers of Docker Desktop.
 
 ---
 
@@ -302,7 +304,7 @@ Open `package.json` and add to the "scripts" section the following modes:
 ⚠️ Replace `D:\path\to\project` to the path to your app in the following command!
 
 ```bash
-docker run --rm   -p 3000:3000   -p 5173:5173   --security-opt=no-new-privileges   --env-file env.local-dev   -e CHOKIDAR_USEPOLLING=1   -e WATCHPACK_POLLING=true   -v D:\path\to\project:/app   untrusted-app-dev pnpm dev:full
+docker run --rm   -p 3000:3000   -p 5173:5173   --security-opt=no-new-privileges   --env-file env.local-dev   -e CHOKIDAR_USEPOLLING=1   -e WATCHPACK_POLLING=true   -v D:\path\to\project:/app   --name untrusted-app-dev   untrusted-app-dev pnpm dev:full
 ```
 
 ### 9.5 Open the App in Dev Mode (only in special user profile of your browser)
