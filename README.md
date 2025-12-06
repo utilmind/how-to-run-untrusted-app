@@ -203,7 +203,7 @@ docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file e
 -   Do not log into important services.
 -   Use only test/demo credentials.
 
-Do not sign in with your dedicated “untrusted” profile.
+**Do not sign** in with your dedicated “untrusted” profile. Let it displaying “sign in” button.
 
 <img style="max-width: 742; height: 1140px; height: 500px;" alt="image" src="https://github.com/user-attachments/assets/a9b44446-c96d-4289-b06a-76bf2ba231fc" />
 
