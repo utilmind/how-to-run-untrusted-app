@@ -187,6 +187,7 @@ docker run --rm   -p 3000:3000   --security-opt=no-new-privileges   --env-file e
 ```bash
 docker stop untrusted-app
 ```
+Or `untrusted-app-dev`. Please check out the exact app name in the list of running containers of Docker Desktop.
 
 ---
 
