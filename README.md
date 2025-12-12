@@ -161,6 +161,8 @@ Do **not** put real credentials in this file.
 
 ## 6. Build & Run the App Safely
 
+Change `untrusted-app` to the name of your real app.
+
 ### 6.1 Build
 
 ```bash
